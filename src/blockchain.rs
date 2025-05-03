@@ -1,9 +1,9 @@
 use hex::ToHex;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Transaction {
     pub sender: String,
     pub recipient: String,
@@ -115,11 +115,8 @@ mod tests {
     fn test_init() {
         let blockchain = Blockchain::init();
         assert_eq!(blockchain.chain.len(), 1);
-        assert_eq!(blockchain.last_block().unwrap().proof, 100);
-        assert_eq!(
-            blockchain.last_block().unwrap().previous_hash,
-            String::from("1")
-        );
+        assert_eq!(blockchain.last_block().proof, 100);
+        assert_eq!(blockchain.last_block().previous_hash, String::from("1"));
         assert!(blockchain.current_transactions.is_empty());
     }
 
@@ -172,10 +169,7 @@ mod tests {
     #[test]
     fn test_last_block() {
         let mut blockchain = Blockchain::init();
-        assert_eq!(blockchain.last_block().unwrap().proof, 100);
-        assert_eq!(
-            blockchain.last_block().unwrap().previous_hash,
-            String::from("1")
-        );
+        assert_eq!(blockchain.last_block().proof, 100);
+        assert_eq!(blockchain.last_block().previous_hash, String::from("1"));
     }
 }
