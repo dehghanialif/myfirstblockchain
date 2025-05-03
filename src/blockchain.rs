@@ -53,13 +53,19 @@ impl Blockchain {
         block
     }
 
-    pub fn new_transaction(self: &mut Self, sender: String, recipient: String, amount: u64) {
+    pub fn new_transaction(
+        self: &mut Self,
+        sender: String,
+        recipient: String,
+        amount: u64,
+    ) -> usize {
         let new_transaction = Transaction {
             sender,
             recipient,
             amount,
         };
         self.current_transactions.push(new_transaction);
+        self.chain.len()
     }
 
     pub fn last_block(self: &Self) -> Option<&Block> {
