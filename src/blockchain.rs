@@ -34,7 +34,7 @@ impl Blockchain {
         blockchain
     }
 
-    pub fn new_block(self: &mut Self, proof: u64, previous_hash: Option<String>) {
+    pub fn new_block(self: &mut Self, proof: u64, previous_hash: Option<String>) -> Block {
         let block = Block {
             index: self.chain.len() + 1,
             timestamp: get_unix_timestamp(),
@@ -45,7 +45,8 @@ impl Blockchain {
         };
 
         self.current_transactions.clear();
-        self.chain.push(block);
+        self.chain.push(block.clone());
+        block
     }
 
     pub fn new_transaction(self: &mut Self, sender: String, recipient: String, amount: u64) {
