@@ -1,7 +1,9 @@
 use hex::ToHex;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::collections::HashSet;
 use std::time::{SystemTime, UNIX_EPOCH};
+use url::Url;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Transaction {
@@ -23,6 +25,7 @@ pub struct Block {
 pub struct Blockchain {
     chain: Vec<Block>,
     current_transactions: Vec<Transaction>,
+    nodes: HashSet<String>,
 }
 
 impl Blockchain {
@@ -30,6 +33,7 @@ impl Blockchain {
         let mut blockchain = Blockchain {
             chain: vec![],
             current_transactions: vec![],
+            nodes: HashSet::new(),
         };
 
         blockchain.new_block(100, Some(String::from("1")));
@@ -79,6 +83,18 @@ impl Blockchain {
         }
 
         proof
+    }
+
+    pub fn register_node(self: &mut Self, address: String) {
+        if let Ok(parsed_url) = Url::parse(&address) {
+            if let Some(netloc) = parsed_url.host_str() {
+                let port = parsed_url.port_or_known_default().unwrap_or(80);
+                let full_address = format!("{}:{}", netloc, port);
+                self.nodes.insert(full_address);
+            }
+        } else {
+            println!("Invalid URL: {}", address);
+        }
     }
 }
 
