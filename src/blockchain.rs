@@ -5,18 +5,18 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Transaction {
-    sender: String,
-    recipient: String,
-    amount: u64,
+    pub sender: String,
+    pub recipient: String,
+    pub amount: u64,
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Block {
-    index: usize,
-    timestamp: f64,
-    transactions: Vec<Transaction>,
-    proof: u64,
-    previous_hash: String,
+    pub index: usize,
+    pub timestamp: f64,
+    pub transactions: Vec<Transaction>,
+    pub proof: u64,
+    pub previous_hash: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -68,8 +68,8 @@ impl Blockchain {
         self.chain.len()
     }
 
-    pub fn last_block(self: &Self) -> Option<&Block> {
-        self.chain.last()
+    pub fn last_block(self: &Self) -> Block {
+        self.chain.last().unwrap().clone()
     }
 
     pub fn proof_of_work(self: &Self, last_proof: u64) -> u64 {

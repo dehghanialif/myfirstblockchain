@@ -1,6 +1,7 @@
 use std::sync::Mutex;
+use uuid::Uuid;
 
-use crate::blockchain::Blockchain;
+use crate::blockchain::{self, Block, Blockchain};
 use actix_web::{
     App, HttpResponse, HttpServer, Responder,
     web::{self, block},
@@ -31,18 +32,48 @@ pub async fn main() -> std::io::Result<()> {
     .await
 }
 
-pub async fn mine() -> impl Responder {
-    HttpResponse::Ok().body("We'll mine a new block")
+#[derive(Serialize)]
+struct MineResponse {
+    message: String,
+    index: usize,
+    transactions: Vec<blockchain::Transaction>,
+    proof: u64,
+    previous_hash: String,
+}
+pub async fn mine(data: web::Data<AppState>) -> impl Responder {
+    // We run the proof of work algorithm to get the next proof...
+    let blockchain = data.blockchain.lock().unwrap();
+    let last_block = blockchain.last_block();
+    let last_block_proof = last_block.proof;
+    let proof = blockchain.proof_of_work(last_block_proof);
+
+    // We must receive a reward for finding the proof.
+    // The sender is "0" to signify that this node has mined a new coin.
+    blockchain.new_transaction(String::from("0"), node_identifier, 1);
+
+    // Forge the new Block by adding it to the chain
+    let previous_hash = blockchain::block_hash(&last_block);
+    let block = blockchain.new_block(proof, Some(last_block.previous_hash));
+
+    let response = MineResponse {
+        message: String::from("New Block Forged"),
+        index: block.index,
+        transactions: block.transactions.clone(),
+        proof: proof,
+        previous_hash: previous_hash,
+    };
+
+    HttpResponse::Ok().json(response)
 }
 
-#[derive(Debug, Deserialize)]
-struct Transaction {
-    sender: String,
-    recipient: String,
-    amount: u64,
-}
+// #[derive(Debug, Deserialize)]
+// struct Transaction {
+//     sender: String,
+//     recipient: String,
+//     amount: u64,
+// }
 pub async fn new_transaction(
-    transaction: web::Json<Transaction>,
+    transaction: web::Json<blockchain::Transaction>,
     data: web::Data<AppState>,
 ) -> impl Responder {
     // println!("{:?}", transaction);
