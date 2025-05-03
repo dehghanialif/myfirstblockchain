@@ -1,13 +1,14 @@
+use serde::Serialize;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct Transaction {
     sender: String,
     recipient: String,
     amount: u64,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct Block {
     index: usize,
     timestamp: f64,
@@ -64,7 +65,7 @@ impl Blockchain {
 }
 
 pub fn hash(block: &Block) -> String {
-    String::from("")
+    serde_json::to_string(block).unwrap()
 }
 
 fn get_unix_timestamp() -> f64 {
