@@ -1,4 +1,5 @@
 use hex::ToHex;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
@@ -95,6 +96,28 @@ impl Blockchain {
         } else {
             println!("Invalid URL: {}", address);
         }
+    }
+
+    pub fn valid_chain(self: &Self, chain: Vec<Block>) -> bool {
+        let mut last_block = chain.get(0).unwrap();
+        let mut current_index = 1;
+        while current_index < chain.len() {
+            let block = chain.get(current_index).unwrap();
+            println!("{}", format!("{:?}", last_block));
+            println!("{}", format!("{:?}", block));
+            println!("\n-----------\n");
+            // Check that the hash of the block is correct
+            if block.previous_hash != block_hash(&last_block) {
+                return false;
+            }
+            // Check that the Proof of Work is correct
+            if valid_proof(last_block.proof, block.proof) != true {
+                return false;
+            }
+            last_block = block;
+            current_index += 1;
+        }
+        true
     }
 }
 
