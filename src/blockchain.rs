@@ -19,7 +19,7 @@ pub struct Block {
     previous_hash: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Blockchain {
     chain: Vec<Block>,
     current_transactions: Vec<Transaction>,
