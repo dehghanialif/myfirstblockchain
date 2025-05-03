@@ -27,7 +27,14 @@ impl Blockchain {
 
     pub fn new_block(self: &Self) {}
 
-    pub fn new_transaction(self: &Self) {}
+    pub fn new_transaction(self: &mut Self, sender: String, recipient: String, amount: u64) {
+        let new_transaction = Transaction {
+            sender,
+            recipient,
+            amount,
+        };
+        self.current_transactions.push(new_transaction);
+    }
 
     pub fn last_block(self: &Self) -> Option<&Block> {
         self.chain.last()
