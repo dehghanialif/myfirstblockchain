@@ -1,4 +1,5 @@
 use serde::Serialize;
+use sha2::{Digest, Sha256};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Serialize)]
@@ -65,7 +66,11 @@ impl Blockchain {
 }
 
 pub fn hash(block: &Block) -> String {
-    serde_json::to_string(block).unwrap()
+    let serialized = serde_json::to_string(block).unwrap();
+    let mut hasher = Sha256::new();
+    hasher.update(serialized.as_bytes());
+    let result = hasher.finalize();
+    hex::encode(result)
 }
 
 fn get_unix_timestamp() -> f64 {
