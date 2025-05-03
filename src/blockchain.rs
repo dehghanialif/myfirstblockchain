@@ -3,14 +3,14 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-#[derive(Clone, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Transaction {
     sender: String,
     recipient: String,
     amount: u64,
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Block {
     index: usize,
     timestamp: f64,
@@ -19,7 +19,7 @@ pub struct Block {
     previous_hash: String,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Blockchain {
     chain: Vec<Block>,
     current_transactions: Vec<Transaction>,
@@ -32,7 +32,7 @@ impl Blockchain {
             current_transactions: vec![],
         };
 
-        blockchain.new_block(100, Some(String::from("")));
+        blockchain.new_block(100, Some(String::from("1")));
 
         blockchain
     }
@@ -76,7 +76,7 @@ impl Blockchain {
     }
 }
 
-fn valid_proof(last_proof: u64, proof: u64) -> bool {
+pub fn valid_proof(last_proof: u64, proof: u64) -> bool {
     let guess = format!("{last_proof}{proof}").encode_hex();
     let guess_hash = hash(guess);
     guess_hash.ends_with("0000")
@@ -87,7 +87,7 @@ pub fn block_hash(block: &Block) -> String {
     hash(serialized)
 }
 
-fn hash(content: String) -> String {
+pub fn hash(content: String) -> String {
     let mut hasher = Sha256::new();
     hasher.update(content.as_bytes());
     let result = hasher.finalize();
@@ -99,4 +99,77 @@ fn get_unix_timestamp() -> f64 {
     let duration_since_epoch = now.duration_since(UNIX_EPOCH).unwrap();
     duration_since_epoch.as_secs() as f64
         + duration_since_epoch.subsec_micros() as f64 / 1_000_000.0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_init() {
+        let blockchain = Blockchain::init();
+        assert_eq!(blockchain.chain.len(), 1);
+        assert_eq!(blockchain.last_block().unwrap().proof, 100);
+        assert_eq!(
+            blockchain.last_block().unwrap().previous_hash,
+            String::from("1")
+        );
+        assert!(blockchain.current_transactions.is_empty());
+    }
+
+    #[test]
+    fn test_new_transaction() {
+        let mut blockchain = Blockchain::init();
+        for i in 0..1000 {
+            let sender = format!("Bob{i}");
+            let recipient = format!("Alice{i}");
+            let amount = i;
+            blockchain.new_transaction(sender.clone(), recipient.clone(), amount);
+            assert_eq!(
+                blockchain
+                    .current_transactions
+                    .get(i as usize)
+                    .unwrap()
+                    .sender,
+                sender
+            );
+            assert_eq!(
+                blockchain
+                    .current_transactions
+                    .get(i as usize)
+                    .unwrap()
+                    .recipient,
+                recipient
+            );
+            assert_eq!(
+                blockchain
+                    .current_transactions
+                    .get(i as usize)
+                    .unwrap()
+                    .amount,
+                amount
+            );
+        }
+        assert_eq!(blockchain.current_transactions.len(), 1000);
+    }
+
+    #[test]
+    fn test_new_block() {
+        let mut blockchain = Blockchain::init();
+        blockchain.new_transaction(String::from("Bob"), String::from("Alice"), 10);
+        let block = blockchain.new_block(0, Some(String::from("1")));
+        assert_eq!(blockchain.chain.len(), 2);
+        assert_eq!(block.timestamp < get_unix_timestamp(), true);
+        assert_eq!(block.transactions.len(), 1);
+    }
+
+    #[test]
+    fn test_last_block() {
+        let mut blockchain = Blockchain::init();
+        assert_eq!(blockchain.last_block().unwrap().proof, 100);
+        assert_eq!(
+            blockchain.last_block().unwrap().previous_hash,
+            String::from("1")
+        );
+    }
 }
